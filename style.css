@@ -1,0 +1,124 @@
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #0f0f0f;
+  color: white;
+}
+
+.fixed-pattern-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('https://magic-pattern-assets.vercel.app/patterns/cubes.svg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.08;
+}
+
+header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.brand .logo {
+  height: 40px;
+  width: auto;
+  border-radius: 8px;
+}
+
+.nav-links a {
+  margin-left: 2rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  transition: background 0.3s;
+}
+
+.nav-links a:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.main-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.main-content p {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.register-form {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 100%;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.register-form input,
+.register-form button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.register-form input {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.register-form button {
+  background: #00aaff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.register-form button:hover {
+  background: #008ecc;
+}
+
+footer {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
