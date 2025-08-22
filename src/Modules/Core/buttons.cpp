@@ -15,6 +15,7 @@
 #include "././Modules/Functions/stopwatch.h"
 #include "././Modules/Functions/bgone.h"
 #include "././UserInterface/menus/menu_enums.h"
+#include "././Modules/Functions/ir_read.h"
 
 // --------- Inputs (Cardputer keyboard vs Stick pins) ----------
 #if defined(M5CARDPUTER)
@@ -93,7 +94,15 @@ void finalizeButtons() {
 }
 
 // Centralize “entering a submenu row” behavior
-static void handleSubmenuAction(MenuState currentMenu, int idx, TFT_eSPI* tft, bool& inStopwatch, bool& inOptionScreen, bool& inBGone) {
+static void handleSubmenuAction(
+  MenuState currentMenu,
+  int idx,
+  TFT_eSPI* tft,
+  bool& inStopwatch,
+  bool& inOptionScreen,
+  bool& inBGone,
+  bool& inIRRead
+) {
   // EXTRAS → Stopwatch opens dedicated UI
   if (currentMenu == EXTRAS_SUBMENU && idx == 1) {
     resetStopwatch();
@@ -110,6 +119,14 @@ static void handleSubmenuAction(MenuState currentMenu, int idx, TFT_eSPI* tft, b
     return;
   }
 
+  // IR → Read (index 4)
+  if (currentMenu == IR_SUBMENU && idx == 4) {
+    irReadReset();
+    irReadDrawScreen(*tft);
+    inIRRead = true;         // FIX: use the proper flag (was 'IrRead')
+    return;
+  }
+
   // default: layered option screen
   drawOptionsLayerBackground(*tft);
   inOptionScreen = true;
@@ -120,9 +137,36 @@ void handleAllButtonLogic(
   bool& inOptionScreen,
   bool& inStopwatch,
   bool& inBGone,
+  bool& inIRRead,
   MenuState& currentMenu
 ) {
   unsigned long now = millis();
+
+  // ---------- IR Read mode ----------
+  if (inIRRead) {
+    bool exitReq = false;
+#if defined(M5CARDPUTER)
+    // A=Clear, B=Pause/Resume, C or backtick=Exit
+    irReadHandleInput(btnAPressed(), btnBPressed(), btnCPressed() || btnExitSpecialPressed(), exitReq);
+#else
+    irReadHandleInput(btnAPressed(), btnBPressed(), btnCPressed(), exitReq);
+#endif
+    if (exitReq) {
+      inIRRead = false;
+      tft->fillScreen(TFT_BLACK);
+      tft->setRotation(ROT_TOP);
+#if defined(M5CARDPUTER)
+      drawOptionsLayerBackground(*tft);
+#endif
+      drawIrSubmenu();
+      finalizeButtons();
+      return;
+    }
+    irReadDrawScreen(*tft);
+    finalizeButtons();
+    delay(30);
+    return;
+  }
 
   // ---------- B-Gone mode ----------
   if (inBGone) {
@@ -131,6 +175,7 @@ void handleAllButtonLogic(
     if (exitReq) {
       inBGone = false;
       tft->fillScreen(TFT_BLACK);
+      tft->setRotation(ROT_TOP);
 #if defined(M5CARDPUTER)
       drawOptionsLayerBackground(*tft);
 #endif
@@ -153,6 +198,7 @@ void handleAllButtonLogic(
 #endif
       inStopwatch = false;
       tft->fillScreen(TFT_BLACK);
+      tft->setRotation(ROT_TOP);
 #if defined(M5CARDPUTER)
       drawOptionsLayerBackground(*tft);
 #endif
@@ -164,8 +210,7 @@ void handleAllButtonLogic(
     if (btnAPressed()) {
       handleStopwatchInput(true);
       drawStopwatchScreen(*tft);
-    }
-    else {
+    } else {
       if (isStopwatchRunning()) {
         drawStopwatchTimeOnly(*tft);
       }
@@ -179,6 +224,7 @@ void handleAllButtonLogic(
   if (inOptionScreen && btnCPressed()) {
     inOptionScreen = false;
     tft->fillScreen(TFT_BLACK);
+    tft->setRotation(ROT_TOP);
     switch(currentMenu) {
       case WIFI_SUBMENU:       drawWiFisubmenu(); break;
       case BLUETOOTH_SUBMENU:  drawBluetoothSubmenu(); break;
@@ -205,6 +251,7 @@ void handleAllButtonLogic(
     if (idx == 0) {
       inOptionScreen = false;
       tft->fillScreen(TFT_BLACK);
+      tft->setRotation(ROT_TOP);
       switch(currentMenu) {
         case WIFI_SUBMENU:       drawWiFisubmenu(); break;
         case BLUETOOTH_SUBMENU:  drawBluetoothSubmenu(); break;
@@ -228,7 +275,7 @@ void handleAllButtonLogic(
   }
 
   // ---------- Submenu browsing ----------
-  if (!inOptionScreen && !inStopwatch) {
+  if (!inOptionScreen && !inStopwatch && !inIRRead && !inBGone) {
     switch(currentMenu) {
       case WIFI_SUBMENU: case BLUETOOTH_SUBMENU: case IR_SUBMENU:
       case RF_SUBMENU: case NRF_SUBMENU: case RADIO_SUBMENU:
@@ -258,7 +305,7 @@ void handleAllButtonLogic(
               default: break;
             }
           } else {
-            handleSubmenuAction(currentMenu, idx, tft, inStopwatch, inOptionScreen, inBGone);
+            handleSubmenuAction(currentMenu, idx, tft, inStopwatch, inOptionScreen, inBGone, inIRRead);
           }
         }
         finalizeButtons();
@@ -268,7 +315,7 @@ void handleAllButtonLogic(
   }
 
   // ---------- Top-level ring ----------
-  if (!inOptionScreen && !inStopwatch) {
+  if (!inOptionScreen && !inStopwatch && !inIRRead && !inBGone) {
     static unsigned long last = 0;
     if (now - last > 200) {
       if (btnBPressed()) {
@@ -315,8 +362,9 @@ void handleAllButtonLogic(
   }
 
   // ---------- Enter submenu from top-level ----------
-  if (!inOptionScreen && !inStopwatch && btnAPressed()) {
+  if (!inOptionScreen && !inStopwatch && !inIRRead && !inBGone && btnAPressed()) {
     tft->fillScreen(TFT_BLACK);
+    tft->setRotation(ROT_TOP);
     switch (currentMenu) {
       case WIFI_MENU:        currentMenu = WIFI_SUBMENU;       setSubmenuType(SUBMENU_WIFI);       drawWiFisubmenu();       break;
       case BLUETOOTH_MENU:   currentMenu = BLUETOOTH_SUBMENU;  setSubmenuType(SUBMENU_BLUETOOTH);  drawBluetoothSubmenu();  break;

@@ -1,9 +1,8 @@
 #pragma once
 #include <TFT_eSPI.h>
 
-// Simple “B‑Gone” picker (TV/Projector/LEDs/etc.) with a look/feel
-// similar to the stopwatch: full‑screen panel; A=select, B/C=navigate,
-// C=back one screen.
+// “B‑Gone” full‑screen panel, A=select, B/C=navigate, C on “<- Back” exits.
+// Matches the layered look (stopwatch/options).
 
 void bgoneReset();
 void bgoneDrawScreen(TFT_eSPI& tft);

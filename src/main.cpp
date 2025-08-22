@@ -31,6 +31,7 @@ MenuState currentMenu = WIFI_MENU;
 bool inOptionScreen = false;
 bool inStopwatch    = false;
 bool inBGone        = false;
+bool inIRRead       = false;   // ← NEW: IR Reader app active flag
 
 void setup() {
   Serial.begin(115200);
@@ -39,6 +40,7 @@ void setup() {
 #else
   M5.begin();
 #endif
+
   pinMode(BACKLIGHT_PIN, OUTPUT);
   digitalWrite(BACKLIGHT_PIN, HIGH);
 
@@ -54,5 +56,6 @@ void setup() {
 
 void loop() {
   updateButtons();
-  handleAllButtonLogic(&tft, inOptionScreen, inStopwatch, inBGone, currentMenu);
+  // Updated call includes the new inIRRead flag (5th bool reference)
+  handleAllButtonLogic(&tft, inOptionScreen, inStopwatch, inBGone, inIRRead, currentMenu);
 }
